@@ -1,3 +1,6 @@
+# 0.4.3
+* [ANDROID] gradle and kotlin update, thus allowing auth2 to use a webview to redirect to the application.
+
 # 0.4.2
 * [iOS] Update AppAuth SDK dependency to 1.2 so it works on iOS 13. Thanks to the PR from [Aynur Dinmukhametov](https://github.com/ARDcode)
 
