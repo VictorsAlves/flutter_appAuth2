@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import androidx.annotation.Nullable;
+
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -167,37 +168,42 @@ public class FlutterAppauthPlugin implements MethodCallHandler, PluginRegistry.A
     }
 
     private void handleTokenMethodCall(Map<String, Object> arguments) {
-        final TokenRequestParameters tokenRequestParameters = processTokenRequestArguments(arguments);
-        if (tokenRequestParameters.serviceConfigurationParameters != null) {
+        try {
+            final TokenRequestParameters tokenRequestParameters = processTokenRequestArguments(arguments);
+            if (tokenRequestParameters.serviceConfigurationParameters != null) {
 
-            AuthorizationServiceConfiguration serviceConfiguration = requestParametersToServiceConfiguration(tokenRequestParameters);
-            performTokenRequest(serviceConfiguration, tokenRequestParameters);
-        } else {
-            if (tokenRequestParameters.discoveryUrl != null) {
-                AuthorizationServiceConfiguration.fetchFromUrl(Uri.parse(tokenRequestParameters.discoveryUrl), new AuthorizationServiceConfiguration.RetrieveConfigurationCallback() {
-                    @Override
-                    public void onFetchConfigurationCompleted(@Nullable AuthorizationServiceConfiguration serviceConfiguration, @Nullable AuthorizationException ex) {
-                        if (ex == null) {
-                            performTokenRequest(serviceConfiguration, tokenRequestParameters);
-                        } else {
-                            finishWithDiscoveryError(ex);
-                        }
-                    }
-                });
-
+                AuthorizationServiceConfiguration serviceConfiguration = requestParametersToServiceConfiguration(tokenRequestParameters);
+                performTokenRequest(serviceConfiguration, tokenRequestParameters);
             } else {
-
-                AuthorizationServiceConfiguration.fetchFromIssuer(Uri.parse(tokenRequestParameters.issuer), new AuthorizationServiceConfiguration.RetrieveConfigurationCallback() {
-                    @Override
-                    public void onFetchConfigurationCompleted(@Nullable AuthorizationServiceConfiguration serviceConfiguration, @Nullable AuthorizationException ex) {
-                        if (ex == null) {
-                            performTokenRequest(serviceConfiguration, tokenRequestParameters);
-                        } else {
-                            finishWithDiscoveryError(ex);
+                if (tokenRequestParameters.discoveryUrl != null) {
+                    AuthorizationServiceConfiguration.fetchFromUrl(Uri.parse(tokenRequestParameters.discoveryUrl), new AuthorizationServiceConfiguration.RetrieveConfigurationCallback() {
+                        @Override
+                        public void onFetchConfigurationCompleted(@Nullable AuthorizationServiceConfiguration serviceConfiguration, @Nullable AuthorizationException ex) {
+                            if (ex == null) {
+                                performTokenRequest(serviceConfiguration, tokenRequestParameters);
+                            } else {
+                                finishWithDiscoveryError(ex);
+                            }
                         }
-                    }
-                });
+                    });
+
+                } else {
+
+                    AuthorizationServiceConfiguration.fetchFromIssuer(Uri.parse(tokenRequestParameters.issuer), new AuthorizationServiceConfiguration.RetrieveConfigurationCallback() {
+                        @Override
+                        public void onFetchConfigurationCompleted(@Nullable AuthorizationServiceConfiguration serviceConfiguration, @Nullable AuthorizationException ex) {
+                            if (ex == null) {
+                                performTokenRequest(serviceConfiguration, tokenRequestParameters);
+                            } else {
+                                finishWithDiscoveryError(ex);
+                            }
+                        }
+                    });
+                }
             }
+        } catch (Exception e) {
+           //   finishWithDiscoveryError(ex));
+            finishWithError(e.getMessage(),e.getMessage());
         }
     }
 
@@ -217,7 +223,7 @@ public class FlutterAppauthPlugin implements MethodCallHandler, PluginRegistry.A
             authRequestBuilder.setLoginHint(loginHint);
         }
 
-        if(promptValues != null && !promptValues.isEmpty()) {
+        if (promptValues != null && !promptValues.isEmpty()) {
             authRequestBuilder.setPromptValues(promptValues);
         }
 
